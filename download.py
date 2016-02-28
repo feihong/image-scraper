@@ -1,5 +1,6 @@
+import urlparse
 import sys
-import base64
+import requests
 from selenium import webdriver
 
 
@@ -8,10 +9,23 @@ def main():
 
     browser = webdriver.Firefox()
     browser.get(url)
-    browser.set_script_timeout(20)
-    data_uri = browser.execute_async_script(JAVASCRIPT)
-    with open('image.png', 'wb') as fp:
-        fp.write(base64.decodestring(data_uri))
+    user_agent = browser.execute_script('return window.navigator.userAgent')
+    print user_agent
+    image_url = browser.execute_script(JAVASCRIPT)
+    print image_url
+    headers = {
+        'user-agent': user_agent,
+        'host': urlparse.urlparse(image_url).netloc,
+        'referer': url,
+        'accept': 'image/png,image/*;q=0.8,*/*;q=0.5',
+        'accept-language': 'Accept-Language: en-US,en;q=0.5',
+        'connection': 'keep-alive',
+    }
+    print headers
+    response = requests.get(image_url, headers=headers)
+    with open('image.jpg', 'wb') as fp:
+        fp.write(response.content)
+    browser.quit()
 
 
 JAVASCRIPT = """
@@ -24,21 +38,7 @@ for (var img of document.querySelectorAll('img')) {
         biggestImage = img;
     }
 }
-// Convert image to base64.
-var resolve = arguments[arguments.length - 1];
-//resolve('foobar')
-var img = new Image();
-img.crossOrigin = 'Anonymous';
-img.onload = function() {
-    var canvas = document.createElement('CANVAS');
-    canvas.height = this.height;
-    canvas.width = this.width;
-    canvas.getContext('2d').drawImage(this, 0, 0);
-    data = canvas.toDataURL('image/png').replace(/^data:image\/(png|jpg);base64,/, '');
-    canvas = null;
-    resolve(data);
-};
-img.src = biggestImage.src;
+return biggestImage.src
 """
 
 
