@@ -1,13 +1,14 @@
+import sys
 import base64
 from selenium import webdriver
 
 
 def main():
-    url = 'https://www.flickr.com/photos/diegojack/16400554073/'
+    url = sys.argv[1]
 
     browser = webdriver.Firefox()
     browser.get(url)
-    browser.set_script_timeout(10)
+    browser.set_script_timeout(20)
     data_uri = browser.execute_async_script(JAVASCRIPT)
     with open('image.png', 'wb') as fp:
         fp.write(base64.decodestring(data_uri))
