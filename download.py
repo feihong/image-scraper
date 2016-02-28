@@ -4,14 +4,16 @@ import requests
 from selenium import webdriver
 
 
+browser = webdriver.Firefox()
+
+
 def main():
     url = sys.argv[1]
 
-    browser = webdriver.Firefox()
     browser.get(url)
     user_agent = browser.execute_script('return window.navigator.userAgent')
     print user_agent
-    image_url = browser.execute_script(JAVASCRIPT)
+    image_url = get_largest_image_url()
     print image_url
     headers = {
         'user-agent': user_agent,
@@ -28,16 +30,27 @@ def main():
     browser.quit()
 
 
+def get_largest_image_url():
+    return browser.execute_script(JAVASCRIPT)
+
+
 JAVASCRIPT = """
-var maxDimensions = 0;
+var images = document.querySelectorAll('img');
+var maxArea = 0;
 var biggestImage = null;
-for (var img of document.querySelectorAll('img')) {
-    var dim = img.naturalWidth * img.naturalHeight;
-    if (dim > maxDimensions) {
-        maxDimensions = dim;
+
+for (var i=0; i < images.length; i++) {
+    var img = images[i];
+    if (img.style.display === 'none') {
+        continue;
+    }
+    var area = img.naturalWidth * img.naturalHeight;
+    if (biggestImage === null || area > maxArea) {
+        maxArea = area;
         biggestImage = img;
     }
 }
+console.log(biggestImage)
 return biggestImage.src
 """
 
