@@ -1,5 +1,6 @@
-import urlparse
+from urllib.parse import urlparse
 import sys
+from pathlib import Path
 import requests
 from selenium import webdriver
 
@@ -9,25 +10,29 @@ browser = webdriver.Firefox()
 
 def main():
     url = sys.argv[1]
+    data = get_image_data(url)
+    with open('image.jpg', 'wb') as fp:
+        fp.write(data)
+    browser.quit()
 
+
+def get_image_data(url):
     browser.get(url)
     user_agent = browser.execute_script('return window.navigator.userAgent')
-    print user_agent
+    print(user_agent)
     image_url = get_largest_image_url()
-    print image_url
+    print(image_url)
     headers = {
         'user-agent': user_agent,
-        'host': urlparse.urlparse(image_url).netloc,
+        'host': urlparse(image_url).netloc,
         'referer': url,
         'accept': 'image/png,image/*;q=0.8,*/*;q=0.5',
         'accept-language': 'Accept-Language: en-US,en;q=0.5',
         'connection': 'keep-alive',
     }
-    print headers
+    print(headers)
     response = requests.get(image_url, headers=headers)
-    with open('image.jpg', 'wb') as fp:
-        fp.write(response.content)
-    browser.quit()
+    return response.content
 
 
 def get_largest_image_url():
@@ -50,7 +55,7 @@ for (var i=0; i < images.length; i++) {
         biggestImage = img;
     }
 }
-console.log(biggestImage)
+console.log(area, biggestImage)
 return biggestImage.src
 """
 
